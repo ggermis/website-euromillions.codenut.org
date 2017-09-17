@@ -1,0 +1,172 @@
+<!doctype html>
+<html>
+	<head>
+		<script type="text/javascript" src="jquery-2.1.4.min.js"></script>
+		<script type="text/javascript" src="handlebars.min-v4.0.0.js"></script>
+		<script type="text/javascript" src="canvasjs.min.js"></script>
+		<script type="text/javascript" src="euromillions.js"></script>
+		<script type="text/javascript" src="helpers.js"></script>
+
+		<link rel="stylesheet" href="euromillions.css" type="text/css"></script>
+	</head>
+
+	<body>
+		<div id="charts">
+			<span id="cost_chart"></span>
+			<span id="number_frequency_chart"></span>
+			<span id="star_frequency_chart"></span>
+		</div>
+
+		<div id="current"></div>
+
+		<div id="winners"></div>
+
+		<script id="entry-template" type="text/x-handlebars-template">
+		  <div class="winner {{#ifCond game.profit '>' 8}}big{{/ifCond}}">
+		  	<span class="count">{{count}}</span>
+
+		  	<span class="group">
+		    {{#each game.pick.numbers}}
+		    	<span class="ball {{#ifIn this ../game/result/numbers}}correct{{/ifIn}}">{{this}}</span>
+		    {{/each}}
+		    {{#each game.pick.stars}}
+		    	<span class="star {{#ifIn this ../game/result/stars}}correct{{/ifIn}}">{{this}}</span>
+		    {{/each}}
+		    </span>
+
+		    <span class="group">
+		    {{#each game.draw.numbers}}
+		    	<span class="ball draw">{{this}}</span>
+		    {{/each}}
+		    {{#each game.draw.stars}}
+		    	<span class="star draw">{{this}}</span>
+		    {{/each}}
+		    </span>
+
+		    <span class="profit">{{game.profit}} &euro;</span>
+		  </div>
+		</script>
+
+
+		<script>
+$(function () {
+
+		var dps1 = []; // dataPoints
+		var dps2 = [];
+		var dps3 = []; // number frequency
+		var dps4 = []; // star frequency
+
+		var chart = new CanvasJS.Chart("cost_chart",{
+			title: {
+				text: "Cost vs Profit"
+			},
+			data: [
+				{
+					type: "area",
+					color: "black",
+					dataPoints: dps2
+				},
+				{
+					type: "area",
+					color: "white",
+					dataPoints: dps1 
+				},
+
+			]
+		});
+
+		var chart2 = new CanvasJS.Chart("number_frequency_chart", {
+			title: {
+				text: "Number Frequency"
+			},
+			data: [
+				{
+					type: "column",
+					color: "black",
+					dataPoints: dps3
+				}
+
+			]
+		});
+
+		var chart3 = new CanvasJS.Chart("star_frequency_chart", {
+			title: {
+				text: "Star Frequency"
+			},
+			data: [
+				{
+					type: "column",
+					color: "black",
+					dataPoints: dps4
+				}
+
+			]
+		});
+
+
+		var xVal = 0;
+		var yVal1 = 0;	
+		var yVal2 = 0;	
+		var updateInterval = 10;
+		var dataLength = 100; // number of dataPoints visible at any point
+
+		var simulator = new GameSimulator();
+		
+		var source = $("#entry-template").html();
+		var template = Handlebars.compile(source);		
+		
+		function updateView (count, game_outcome) {
+			$('#current').html(template({count: count, game: game_outcome}));
+			if (game_outcome.profit) {
+				$('#winners').prepend(template({count: count, game: game_outcome}));
+			}
+		}
+
+		var updateCharts = function (count) {
+			count = count || 1;
+			// count is number of times loop runs to generate random dataPoints.
+			for (var j = 0; j < count; j++) {				
+				var game_outcome = simulator.playGame();
+
+				updateView(xVal, game_outcome);	
+ 				yVal1 += game_outcome.profit;
+ 				yVal2 += game_outcome.cost; 				
+ 				dps1.push({
+ 					x: xVal,
+ 					y: yVal1
+ 				});
+ 				dps2.push({
+ 					x: xVal,
+ 					y: yVal2
+ 				});
+ 				for (var i=0; i<game_outcome.statistics.numbers.length; i++) {
+ 					dps3[i] = { x: i+1, y: game_outcome.statistics.numbers[i] };
+ 				}
+ 				for (var i=0; i<game_outcome.statistics.stars.length; i++) {
+ 					dps4[i] = { x: i+1, y: game_outcome.statistics.stars[i] };
+ 				}
+ 				xVal++;
+ 			};
+ 			if (dps1.length > dataLength)
+			{
+				dps1.shift();				
+				dps2.shift();
+			}
+
+			chart.render();	
+			chart2.render();
+			chart3.render();	
+		};
+
+
+		// generates first set of dataPoints
+		updateCharts(dataLength); 
+
+		// update chart after specified time. 
+		setInterval(function(){updateCharts()}, updateInterval); 
+
+	});
+
+		</script>
+	</body>
+</html>

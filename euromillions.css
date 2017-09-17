@@ -1,0 +1,101 @@
+h1 {
+    text-align: center;
+    color: gray;
+}
+
+body {
+    position: relative;
+    min-width: 40em;
+}
+
+#charts {
+    text-align: center;
+}
+
+#cost_chart, #number_frequency_chart, #star_frequency_chart {
+    display: inline-block;
+    min-width: 310px; 
+    width: 30%;
+    height: 200px; 
+    margin: 0 auto;
+}
+
+#current {
+    margin: 1em 0;
+    border-radius: 25px;
+    border: 1px solid black;
+    padding: .1em;    
+    background-color: rgba(200, 200, 200, 0.3);
+}
+
+.ball {
+    width:1.5em;
+    height:1.5em;
+    border-radius:250px;
+    display: inline-block;
+    font-size: 1em;
+    line-height:1.5em;
+    text-align:center;
+    color: white;
+    background: black;
+    border: 1px solid black;
+}
+
+.star {
+    width:1.5em;
+    height:1.5em;
+    display: inline-block;
+    font-size: 1em;
+    line-height:1.5em;
+    text-align:center;
+    color: white;
+    background: black;
+    border: 1px solid black;
+}
+
+.correct {
+    color: black;
+    background: lightgrey;
+}
+
+.draw {
+    color: black;
+    background: lightgrey;
+}
+
+.profit {
+    font-size: 1.3em;
+    position: absolute;
+    right: 1em;
+}
+
+.count {
+    font-size: 1.3em;
+    position: absolute;
+    left: 1em;
+}
+
+.winner {
+    text-align: center;
+    width: 100%;
+    margin: 4px auto;
+}
+
+.group {
+    margin: 0 12px;
+}
+
+#winners .big {
+    background-color: rgba(100, 100, 100, 0.5);
+    border-radius: 200px;
+    border: 1px solid black;
+    color: black;
+    padding: .2em 0;
+}
+
+.debug {
+    width: 75%; 
+    background-color: lightgrey; 
+    padding: 1em;
+    margin: 0 auto;
+}
