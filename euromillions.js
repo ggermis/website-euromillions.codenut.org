@@ -78,6 +78,14 @@ function pickStars(count) {
 
 // Pick strategies
 
+var pick_strategies = {
+	'random': RandomPickStrategy,
+	'fixed': FixedPickStrategy,
+	'successive': SuccessiveNumbersPickStrategy,
+	'trailing': TrailingPickStrategy,
+	'highroller': HighRollerPickStrategy,
+}
+
 function RandomPickStrategy() {
 	this.pick = function() {
 		return { numbers: pickNumbers(), stars: pickStars() };	
@@ -168,9 +176,13 @@ function Game() {
 }
 
 
-function GameSimulator() {
+function GameSimulator(strategy = 'fixed') {
+	console.log(strategy);
 	this.statistics = new StatisticsCollector();
-	this.pick_strategy = new FixedPickStrategy();
+
+	//this.pick_strategy = new FixedPickStrategy();
+	this.pick_strategy = new pick_strategies[strategy]();
+	console.log(this.pick_strategy);
 	// this.pick_strategy = new SuccessiveNumbersPickStrategy();
 	this.draw_strategy = new RandomDrawStrategy();
 	this.game = new Game();

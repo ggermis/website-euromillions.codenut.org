@@ -110,7 +110,9 @@ $(function () {
 		var updateInterval = 10;
 		var dataLength = 100; // number of dataPoints visible at any point
 
-		var simulator = new GameSimulator();
+		console.log(location.search);
+		let params = new URLSearchParams(location.search);
+		var simulator = new GameSimulator(params.get('strategy') || 'fixed');
 		
 		var source = $("#entry-template").html();
 		var template = Handlebars.compile(source);		
