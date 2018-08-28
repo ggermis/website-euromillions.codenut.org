@@ -82,6 +82,14 @@ function StatisticsCollector() {
 	this.numberFrequency = Array.apply(null, Array(50)).map(Number.prototype.valueOf,0);
 	this.starFrequency = Array.apply(null, Array(11)).map(Number.prototype.valueOf,0);
 
+	this.to_sorted_array = function(values, sort) {
+		return Array.from(values, (x,y) => y+x*100 ).sort(sort);
+	}
+
+	this.pick_from_array = function(values, count) {
+		return Array.from(values, x => x%100+1).slice(0, count || 5)
+	}
+
 	this.collect = function(draw) {
 		for (var i=0, len = draw.numbers.length; i < len; i++) {
 			this.numberFrequency[draw.numbers[i]-1]++;
@@ -104,7 +112,8 @@ var pick_strategies = {
 	'trailing': TrailingPickStrategy,
 	'highroller': HighRollerPickStrategy,
 	'highfrequency': HighFrequencyPickStrategy,
-	'lowfrequency': LowFrequencyPickStrategy
+	'lowfrequency': LowFrequencyPickStrategy,
+	'oddeven': OddEvenPickStrategy
 }
 
 
@@ -145,43 +154,46 @@ function HighRollerPickStrategy() {
 
 function HighFrequencyPickStrategy() {
 	this.sort = function(a, b) {
+		// descending
 		return b-a;
 	}
 
-	this.encode = function(values) {
-		return Array.from(values, (x,y) => y+x*100 ).sort(this.sort);
-	}
-
-	this.decode = function(values) {
-		return Array.from(values, x => x%100+1).sort(this.sort);
-	}
-
 	this.pick = function() {
-		var numbers = this.encode(statistics.numberFrequency);
-		var stars = this.encode(statistics.starFrequency);
-		return { numbers: this.decode(numbers.slice(0, 5)), stars: this.decode(stars.slice(0, 2)) }
+		return { 
+			numbers: statistics.pick_from_array(statistics.to_sorted_array(statistics.numberFrequency, this.sort), 5),
+			stars: statistics.pick_from_array(statistics.to_sorted_array(statistics.starFrequency, this.sort), 2)
+		}
 	}
 }
 
 
 function LowFrequencyPickStrategy() {
 	this.sort = function(a, b) {
+		// ascending
 		return a-b;
 	}
 
-	this.encode = function(values) {
-		return Array.from(values, (x,y) => y+x*100 ).sort(this.sort);
+	this.pick = function() {
+		return { 
+			numbers: statistics.pick_from_array(statistics.to_sorted_array(statistics.numberFrequency, this.sort), 5),
+			stars: statistics.pick_from_array(statistics.to_sorted_array(statistics.starFrequency, this.sort), 2)
+		}
 	}
+}
 
-	this.decode = function(values) {
-		return Array.from(values, x => x%100+1).sort(this.sort)
+function OddEvenPickStrategy() {
+	this.shuffle = function(values) {
+		return values.sort(function() { return .5-Math.random(); });
 	}
 
 	this.pick = function() {
-		var numbers = this.encode(statistics.numberFrequency);
-		var stars = this.encode(statistics.starFrequency);
-
-		return { numbers: this.decode(numbers.slice(0, 5)), stars: this.decode(stars.slice(0, 2)) }
+		var numbers = pickNumbers(50);
+		var even_numbers = this.shuffle(numbers.filter(x => x % 2 === 0)).slice(0,3);
+		var odd_numbers = this.shuffle(numbers.filter(x => x % 2 !== 0)).slice(0,2);
+		return {
+			numbers: even_numbers.concat(odd_numbers).sort((a,b) => a-b),
+			stars: pickStars()
+		}
 	}
 }
 

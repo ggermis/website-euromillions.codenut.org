@@ -11,6 +11,7 @@ The script allows for multiple strategies, both for draws and picks
 * [HighRollerPickStrategy](http://euromillions.codenut.org?strategy=highroller)
 * [HighFrequencyPickStrategy](http://euromillions.codenut.org?strategy=highfrequency)
 * [LowFrequencyPickStrategy](http://euromillions.codenut.org?strategy=lowfrequency)
+* [OddEvenPickStrategy]()http://euromillions.codenut.org?strategy=oddeven)
 
 ## Pick Strategies
 
