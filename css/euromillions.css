@@ -8,6 +8,18 @@ body {
     min-width: 40em;
 }
 
+#strategy::before {
+    content: "strategy: ";
+}
+
+#strategy {
+    font-size: 1.5em;
+    font-weight: bold;
+    border: 1px solid black;
+    margin: 1em 0;
+    text-align: center;
+}
+
 #charts {
     text-align: center;
 }

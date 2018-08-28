@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 	<head>
-		<script type="text/javascript" src="lib/jquery-2.1.4.min.js"></script>
+		<script type="text/javascript" src="lib/jquery-3.3.1.min.js"></script>
 		<script type="text/javascript" src="lib/handlebars.min-v4.0.0.js"></script>
 		<script type="text/javascript" src="lib/canvasjs.min.js"></script>
 		<script type="text/javascript" src="euromillions.js"></script>
@@ -11,6 +11,8 @@
 	</head>
 
 	<body>
+		<div id="strategy">&nbsp;</div>
+
 		<div id="charts">
 			<span id="cost_chart"></span>
 			<span id="number_frequency_chart"></span>
@@ -110,9 +112,11 @@ $(function () {
 		var updateInterval = 10;
 		var dataLength = 100; // number of dataPoints visible at any point
 
-		console.log(location.search);
 		let params = new URLSearchParams(location.search);
-		var simulator = new GameSimulator(params.get('strategy') || 'fixed');
+		let strategy = params.get('strategy') || 'fixed';
+		$('#strategy').html(strategy);
+
+		var simulator = new GameSimulator(strategy);
 		
 		var source = $("#entry-template").html();
 		var template = Handlebars.compile(source);		
@@ -127,29 +131,31 @@ $(function () {
 		var updateCharts = function (count) {
 			count = count || 1;
 			// count is number of times loop runs to generate random dataPoints.
-			for (var j = 0; j < count; j++) {				
+			for (var j = 0; j < count; j++) {
 				var game_outcome = simulator.playGame();
 
-				updateView(xVal, game_outcome);	
- 				yVal1 += game_outcome.profit;
- 				yVal2 += game_outcome.cost; 				
- 				dps1.push({
- 					x: xVal,
- 					y: yVal1
- 				});
- 				dps2.push({
- 					x: xVal,
- 					y: yVal2
- 				});
- 				for (var i=0; i<game_outcome.statistics.numbers.length; i++) {
- 					dps3[i] = { x: i+1, y: game_outcome.statistics.numbers[i] };
- 				}
- 				for (var i=0; i<game_outcome.statistics.stars.length; i++) {
- 					dps4[i] = { x: i+1, y: game_outcome.statistics.stars[i] };
- 				}
- 				xVal++;
- 			};
- 			if (dps1.length > dataLength)
+				updateView(xVal, game_outcome);
+				yVal1 += game_outcome.profit;
+				yVal2 += game_outcome.cost;
+				chart.options.title.text = 'Cost / Profit (' + (yVal1 / yVal2 * 100).toFixed(2) + '%)';
+
+				dps1.push({
+					x: xVal,
+					y: yVal1
+				});
+				dps2.push({
+					x: xVal,
+					y: yVal2
+				});
+				for (var i=0; i<game_outcome.statistics.numbers.length; i++) {
+					dps3[i] = { x: i+1, y: game_outcome.statistics.numbers[i] };
+				}
+				for (var i=0; i<game_outcome.statistics.stars.length; i++) {
+					dps4[i] = { x: i+1, y: game_outcome.statistics.stars[i] };
+				}
+				xVal++;
+			};
+			if (dps1.length > dataLength)
 			{
 				dps1.shift();				
 				dps2.shift();

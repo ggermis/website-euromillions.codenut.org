@@ -76,6 +76,25 @@ function pickStars(count) {
 }
 
 
+// Statistics
+
+function StatisticsCollector() {
+	this.numberFrequency = Array.apply(null, Array(50)).map(Number.prototype.valueOf,0);
+	this.starFrequency = Array.apply(null, Array(11)).map(Number.prototype.valueOf,0);
+
+	this.collect = function(draw) {
+		for (var i=0, len = draw.numbers.length; i < len; i++) {
+			this.numberFrequency[draw.numbers[i]-1]++;
+		}
+		for (var i=0, len = draw.stars.length; i < len; i++) {
+			this.starFrequency[draw.stars[i]-1]++;
+		}
+	}
+}
+
+var statistics = new StatisticsCollector();
+
+
 // Pick strategies
 
 var pick_strategies = {
@@ -84,7 +103,10 @@ var pick_strategies = {
 	'successive': SuccessiveNumbersPickStrategy,
 	'trailing': TrailingPickStrategy,
 	'highroller': HighRollerPickStrategy,
+	'highfrequency': HighFrequencyPickStrategy,
+	'lowfrequency': LowFrequencyPickStrategy
 }
+
 
 function RandomPickStrategy() {
 	this.pick = function() {
@@ -106,9 +128,11 @@ function SuccessiveNumbersPickStrategy() {
 }
 
 function TrailingPickStrategy() {
-	this.previous = { numbers: pickNumbers(), stars: pickStars() };
+	this.memoized = { numbers: pickNumbers(), stars: pickStars() };
 	this.pick = function() {
-		return { numbers: this.previous.numbers, stars: this.previous.stars }
+		var result = { numbers: this.memoized.numbers, stars: this.memoized.stars }
+		this.memoized = { numbers: pickNumbers(), stars: pickStars() };
+		return result;
 	};
 }
 
@@ -118,6 +142,48 @@ function HighRollerPickStrategy() {
 	};
 }
 
+
+function HighFrequencyPickStrategy() {
+	this.sort = function(a, b) {
+		return b-a;
+	}
+
+	this.encode = function(values) {
+		return Array.from(values, (x,y) => y+x*100 ).sort(this.sort);
+	}
+
+	this.decode = function(values) {
+		return Array.from(values, x => x%100+1).sort(this.sort);
+	}
+
+	this.pick = function() {
+		var numbers = this.encode(statistics.numberFrequency);
+		var stars = this.encode(statistics.starFrequency);
+		return { numbers: this.decode(numbers.slice(0, 5)), stars: this.decode(stars.slice(0, 2)) }
+	}
+}
+
+
+function LowFrequencyPickStrategy() {
+	this.sort = function(a, b) {
+		return a-b;
+	}
+
+	this.encode = function(values) {
+		return Array.from(values, (x,y) => y+x*100 ).sort(this.sort);
+	}
+
+	this.decode = function(values) {
+		return Array.from(values, x => x%100+1).sort(this.sort)
+	}
+
+	this.pick = function() {
+		var numbers = this.encode(statistics.numberFrequency);
+		var stars = this.encode(statistics.starFrequency);
+
+		return { numbers: this.decode(numbers.slice(0, 5)), stars: this.decode(stars.slice(0, 2)) }
+	}
+}
 
 // Draw strategies
 
@@ -131,23 +197,6 @@ function HistoricDrawStrategy() {
 	// TODO: implement getting real historic draw data
 	this.draw = function() {
 		return { numbers: pickNumbers(), stars: pickStars() };	
-	}
-}
-
-
-// Statistics
-
-function StatisticsCollector() {
-	this.numberFrequency = Array.apply(null, Array(50)).map(Number.prototype.valueOf,0);
-	this.starFrequency = Array.apply(null, Array(11)).map(Number.prototype.valueOf,0);
-
-	this.collect = function(draw) {
-		for (var i=0, len = draw.numbers.length; i < len; i++) {
-			this.numberFrequency[draw.numbers[i]-1]++;
-		}
-		for (var i=0, len = draw.stars.length; i < len; i++) {
-			this.starFrequency[draw.stars[i]-1]++;
-		}
 	}
 }
 
@@ -177,42 +226,25 @@ function Game() {
 
 
 function GameSimulator(strategy = 'fixed') {
-	console.log(strategy);
-	this.statistics = new StatisticsCollector();
+	// this.statistics = new StatisticsCollector();
 
-	//this.pick_strategy = new FixedPickStrategy();
 	this.pick_strategy = new pick_strategies[strategy]();
-	console.log(this.pick_strategy);
-	// this.pick_strategy = new SuccessiveNumbersPickStrategy();
 	this.draw_strategy = new RandomDrawStrategy();
+
 	this.game = new Game();
 	this.cost_per_game = calculateCost(this.pick_strategy.pick());
 
 	this.playGame = function() {
 		var result = this.game.play(this.pick_strategy.pick(), this.draw_strategy.draw());
-		this.statistics.collect(result.draw);
+		statistics.collect(result.draw);
 
 		result.cost = this.cost_per_game;
 		result.statistics = {
-			numbers: this.statistics.numberFrequency,
-			stars: this.statistics.starFrequency
+			numbers: statistics.numberFrequency,
+			stars: statistics.starFrequency
 		};
 
 		return result;
 	}	
 }
 
-
-// console.log(factorial(6));
-// console.log(factorial(5));
-// console.log(calculateNumberOfCombinations(6, 5));
-
-// var strategy = new RandomStrategy();
-// var strategy = new FixedPickStrategy();
-// var strategy = new TrailingDrawStrategy();
-// var strategy = new HighRollerStrategy();
-
-// console.log(new Game(strategy).play());
-// console.log(new Game(strategy).play());
-// console.log(new Game(strategy).play());
-// console.log(new Game(strategy).play());
